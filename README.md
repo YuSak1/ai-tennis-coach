@@ -8,7 +8,7 @@ Powered by OpenAI and LangChain.
 The Gradio app is deployed in HuggingFace → https://huggingface.co/spaces/YuSak1/ai-tennis-coach
 
 <div align="center">
-    <img src="screen1.png" width="800">
+    <img src="screen1.png" width="900">
 </div>
 
 
