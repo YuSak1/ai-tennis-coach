@@ -1,0 +1,11 @@
+gradio
+langchain
+langchain-community
+langchain-openai
+faiss-cpu
+google-api-python-client
+youtube-transcript-api
+tqdm
+
+
+

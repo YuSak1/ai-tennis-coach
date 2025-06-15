@@ -1,0 +1,14 @@
+# Default ignored files
+.gradio/*
+.idea/*
+Transcripts/*
+Transcripts_m/*
+flagged/*
+local/*
+output/*
+venv/*
+
+.python-version
+
+test.py
+video_ids.txt
