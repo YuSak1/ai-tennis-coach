@@ -7,6 +7,11 @@ Powered by OpenAI and LangChain.
 
 The Gradio app is deployed in HuggingFace → https://huggingface.co/spaces/YuSak1/ai-tennis-coach
 
+<div align="center">
+    <img src=".github/screen1.png" width="400">
+</div>
+
+
 ## Requirements
 Python 3.10.5
 
