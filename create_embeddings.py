@@ -19,3 +19,5 @@ split_docs = splitter.split_documents(texts)
 embedding = OpenAIEmbeddings()
 db = FAISS.from_documents(split_docs, embedding)
 db.save_local("faiss_index")
+
+print(f"✅ Saved FAISS index.")

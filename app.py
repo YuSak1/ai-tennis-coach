@@ -3,6 +3,7 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.chains import RetrievalQA
+from langchain_core.output_parsers import StrOutputParser
 
 
 dir_faiss = "faiss_index"
@@ -12,10 +13,8 @@ db = FAISS.load_local(dir_faiss, embedding, allow_dangerous_deserialization=True
 
 # Define prompt
 system_template = """
-You are a professional tennis coach trained by studying instructional videos.
-Based on the input texts, provide advice to improve the user's tennis skills.
-ONLY use the provided information in {context} to answer the user's question.
-Do NOT rely on prior knowledge unless context is missing or unclear.
+You are a professional tennis coach trained. Provide advice to improve the user's tennis skills.
+Answer using ONLY the provided context. If the answer is not in the context, say you don't know.
 Adjust your answer based on user's level and age.
 Provide advice only on the shot user is asking.
 Give your answer in 3 points.
@@ -30,30 +29,39 @@ Always mention the user's level, age, shot, and skill.)
 (On the last line, add your comments to motivate the user.)
 """
 
+
 prompt = ChatPromptTemplate.from_messages([
     ("system", system_template),
-    ("human", "As a tennis coach, learn tennis skills from this information:\n\n{context}\n\nNow answer this question:\n\n{question}")
+    ("human", "Question:\n{question}\n\nContext:\n{context}")
 ])
 
-# Setup LLM and RetrievalQA chain
-llm = ChatOpenAI(model="gpt-4.1-nano", temperature=0.2)
-qa_chain = RetrievalQA.from_chain_type(
-    llm=llm,
-    retriever=db.as_retriever(),
-    chain_type_kwargs={"prompt": prompt},
-    chain_type="stuff"
-)
+# Retriever
+retriever = db.as_retriever(search_type="mmr", search_kwargs={"k":12, "fetch_k":20, "lambda_mult":0.5})
 
-# Gradio function
+# LLM
+llm = ChatOpenAI(model="gpt-4.1-nano", temperature=0.4)
+
+
 def get_coaching_advice(level, age, shot, skill, court, comments):
-    question = f"I want to improve my {shot} and gain more {skill}. I usually play on {court} court. My age is {age}. My level is {level}."
-    if comments.strip():
-        question += f"I also want your advice on the following comments: {comments.strip()}"
-    response = qa_chain.invoke({"query": question})
-    return response if isinstance(response, str) else response["result"]
+    chain = prompt | llm | StrOutputParser()
+
+    question = (
+        f"I want to improve my {shot} and gain more {skill}. "
+        f"I usually play on {court} court. My age is {age}. My level is {level}."
+    )
+    if comments and comments.strip():
+        question += f" {comments.strip()}"
+
+    print(question)
+
+    ctx = retriever.invoke(question)
+    resp = chain.invoke({"question": question, "context": ctx})
+
+    return resp
+
 
 # Dropdown options
-level_options = ["Beginner", "Intermediate", "Advanced", "Pro", "GOAT"]
+level_options = ["Beginner", "Intermediate", "Advanced", "Pro"]
 age_options = ["10 or younger", "20s", "30s", "40s", "50+"]
 shot_options = ["Flat Forehand", "Topspin Forehand", "Slice Forehand", "Two-handed Backhand", "One-handed Backhand",
                 "Slice Backhand", "Flat Serve", "Spin Serve", "Kick Serve", "Slice Serve", "Return", "Volley", "Drop shot", "Smash"]
